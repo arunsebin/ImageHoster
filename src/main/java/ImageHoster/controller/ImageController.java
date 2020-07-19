@@ -1,5 +1,6 @@
 package ImageHoster.controller;
 
+import ImageHoster.model.Comment;
 import ImageHoster.model.Image;
 import ImageHoster.model.Tag;
 import ImageHoster.model.User;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 
 @Controller
@@ -85,6 +87,22 @@ public class ImageController {
         newImage.setDate(new Date());
         imageService.uploadImage(newImage);
         return "redirect:/images";
+    }
+
+    @RequestMapping(value = "/image/{imageId}/{imageTitle}/comments")
+    public String addImageComment(@PathVariable("imageId") String imageId, @PathVariable("imageTitle") String imageTitle, @RequestParam("comment") String commentText, HttpSession session, Model model) {
+        User user = (User) session.getAttribute("loggeduser");
+        Comment comment = new Comment();
+        comment.setText(commentText);
+        comment.setCreatedDate(LocalDate.now());
+        comment.setUser(user);
+        Image image = imageService.getImageByTitle(imageId, imageTitle);
+        comment.setImage(image);
+        imageService.addImageComment(comment);
+        model.addAttribute("image", image);
+        model.addAttribute("tags", image.getTags());
+        model.addAttribute("comments", imageService.getImageComments(imageId, imageTitle));
+        return "/images/image";
     }
 
     //This controller method is called when the request pattern is of type 'editImage'
